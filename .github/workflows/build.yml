@@ -9,6 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -19,7 +21,39 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Generate signing keystore
+        run: |
+          keytool -genkey -v -keystore release.keystore \
+            -alias release -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass android -keypass android \
+            -dname "CN=Extensions,O=Extensions,C=US"
+
+      - name: Extract signing key hash
+        id: signing_key
+        run: |
+          HASH=$(keytool -list -v -keystore release.keystore \
+            -storepass android -alias release -keypass android \
+            | grep "SHA256:" | awk '{print $2}' | tr -d ':' | tr '[:upper:]' '[:lower:]')
+          echo "hash=$HASH" >> $GITHUB_OUTPUT
+          echo "Signing key: $HASH"
+
+      - name: Update index.json with signing key (first run only)
+        run: |
+          # Only insert signingKey if not already present
+          if ! grep -q '"signingKey"' index.json; then
+            HASH="${{ steps.signing_key.outputs.hash }}"
+            sed -i '0,/^  "badgeLabel":/a\  "signingKey": "'"$HASH"'",' index.json
+            echo "signingKey added to index.json"
+          else
+            echo "signingKey already present, skipping update"
+          fi
+
       - name: Build all extensions
+        env:
+          KEYSTORE_PATH: ${{ github.workspace }}/release.keystore
+          KEYSTORE_PASSWORD: android
+          KEY_ALIAS: release
+          KEY_PASSWORD: android
         run: ./gradlew assembleRelease
 
       - name: Upload APKs
@@ -27,3 +61,11 @@ jobs:
         with:
           name: apks
           path: "src/all/*/build/outputs/apk/release/*.apk"
+
+      - name: Commit updated index.json
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add index.json
+          git diff --staged --quiet || git commit -m "chore: update signing key in index.json"
+          git push
