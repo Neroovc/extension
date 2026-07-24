@@ -7,6 +7,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -27,8 +29,21 @@ jobs:
           KEY_PASSWORD: android
         run: ./gradlew assembleRelease
 
-      - name: Upload APKs
-        uses: actions/upload-artifact@v4
+      - name: Delete old latest release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete latest --yes 2>/dev/null || true
+          git push --delete origin latest 2>/dev/null || true
+
+      - name: Create Release
+        uses: ncipollo/release-action@v1
         with:
-          name: apks
-          path: "src/all/*/build/outputs/apk/release/*.apk"
+          tag: latest
+          name: "Latest Build"
+          artifacts: "src/all/*/build/outputs/apk/release/*.apk"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          makeLatest: true
+          allowUpdates: true
+          removeArtifacts: true
+          body: "Automated build from master branch."
