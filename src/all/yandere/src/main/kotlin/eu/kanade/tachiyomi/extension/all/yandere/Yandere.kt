@@ -7,6 +7,7 @@ import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.source.model.SChapter
 import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.source.online.HttpSource
+import rx.Observable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.Headers
@@ -85,24 +86,29 @@ class Yandere : HttpSource() {
         })
     }
 
-    // ─── Manga / chapter update ─────────────────────────────
+    // ─── Manga details + chapter list ───────────────────────
 
-    override suspend fun getMangaUpdate(
-        manga: SManga,
-        chapters: List<SChapter>,
-        fetchDetails: Boolean,
-        fetchChapters: Boolean
-    ): SMangaUpdate {
-        val doc = fetchDocument(baseUrl + manga.url)
-        val updatedManga = if (fetchDetails) parseMangaDetails(doc) else manga
-        val updatedChapters = if (fetchChapters) {
-            listOf(SChapter.create().apply {
-                url = manga.url
-                name = "Image"
-                chapter_number = 1F
-            })
-        } else chapters
-        return SMangaUpdate(updatedManga, updatedChapters)
+    override fun fetchMangaDetails(manga: SManga): Observable<SManga> {
+        return client.newCall(mangaDetailsRequest(manga))
+            .asObservableSuccess()
+            .map { response ->
+                val doc = Jsoup.parse(response.body?.string() ?: "", baseUrl + manga.url)
+                parseMangaDetails(doc)
+            }
+    }
+
+    override fun fetchChapterList(manga: SManga): Observable<List<SChapter>> {
+        return client.newCall(chapterListRequest(manga))
+            .asObservableSuccess()
+            .map { response ->
+                val doc = Jsoup.parse(response.body?.string() ?: "", baseUrl + manga.url)
+                listOf(SChapter.create().apply {
+                    url = manga.url
+                    name = "Image"
+                    chapter_number = 1F
+                    date_upload = 0
+                })
+            }
     }
 
     private fun parseMangaDetails(doc: Document): SManga {
@@ -145,6 +151,14 @@ class Yandere : HttpSource() {
             status = SManga.COMPLETED
             genre = tagLinks.joinToString(", ") { it.text() }
         }
+    }
+
+    override fun mangaDetailsRequest(manga: SManga): Request {
+        return GET(baseUrl + manga.url, headers)
+    }
+
+    override fun chapterListRequest(manga: SManga): Request {
+        return GET(baseUrl + manga.url, headers)
     }
 
     // ─── Pages ──────────────────────────────────────────────

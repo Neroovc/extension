@@ -7,6 +7,7 @@ import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.source.model.SChapter
 import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.source.online.HttpSource
+import rx.Observable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.Headers
@@ -113,23 +114,34 @@ class Danbooru : HttpSource() {
             url = manga.url
             name = "Image"
             chapter_number = 1F
-            date_upload = manga.initializedAt?.time ?: 0L
+            date_upload = 0
         }
         return listOf(chapter)
     }
 
-    // ─── Chapter detail + manga update ──────────────────────
+    // ─── Manga details + chapter list ───────────────────────
 
-    override suspend fun getMangaUpdate(
-        manga: SManga,
-        chapters: List<SChapter>,
-        fetchDetails: Boolean,
-        fetchChapters: Boolean
-    ): SMangaUpdate {
-        val doc = fetchDocument(baseUrl + manga.url)
-        val updatedManga = if (fetchDetails) mangaDetailsParse(doc) else manga
-        val updatedChapters = if (fetchChapters) chapterListParse(doc) else chapters
-        return SMangaUpdate(updatedManga, updatedChapters)
+    override fun fetchMangaDetails(manga: SManga): Observable<SManga> {
+        return client.newCall(mangaDetailsRequest(manga))
+            .asObservableSuccess()
+            .map { response ->
+                val doc = Jsoup.parse(response.body?.string() ?: "", baseUrl + manga.url)
+                mangaDetailsParse(doc)
+            }
+    }
+
+    override fun fetchChapterList(manga: SManga): Observable<List<SChapter>> {
+        return client.newCall(chapterListRequest(manga))
+            .asObservableSuccess()
+            .map { response ->
+                val doc = Jsoup.parse(response.body?.string() ?: "", baseUrl + manga.url)
+                listOf(SChapter.create().apply {
+                    url = manga.url
+                    name = "Image"
+                    chapter_number = 1F
+                    date_upload = 0
+                })
+            }
     }
 
     private fun mangaDetailsParse(doc: Document): SManga {
@@ -180,6 +192,14 @@ class Danbooru : HttpSource() {
             name = "Image"
             chapter_number = 1F
         })
+    }
+
+    override fun mangaDetailsRequest(manga: SManga): Request {
+        return GET(baseUrl + manga.url, headers)
+    }
+
+    override fun chapterListRequest(manga: SManga): Request {
+        return GET(baseUrl + manga.url, headers)
     }
 
     // ─── Pages ──────────────────────────────────────────────
