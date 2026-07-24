@@ -11,7 +11,7 @@
         "name": "Danbooru",
         "packageName": "eu.kanade.tachiyomi.extension.all.danbooru",
         "resources": {
-          "apkUrl": "https://github.com/Neroovc/extension/releases/latest/download/tachiyomi-all.danbooru-v1.0.0.apk",
+          "apkUrl": "https://github.com/Neroovc/extension/releases/latest/download/danbooru-release.apk",
           "iconUrl": "https://raw.githubusercontent.com/Neroovc/extension/master/.github/icons/danbooru.png",
           "jarUrl": ""
         },
@@ -32,7 +32,7 @@
         "name": "Gelbooru",
         "packageName": "eu.kanade.tachiyomi.extension.all.gelbooru",
         "resources": {
-          "apkUrl": "https://github.com/Neroovc/extension/releases/latest/download/tachiyomi-all.gelbooru-v1.0.0.apk",
+          "apkUrl": "https://github.com/Neroovc/extension/releases/latest/download/gelbooru-release.apk",
           "iconUrl": "https://raw.githubusercontent.com/Neroovc/extension/master/.github/icons/gelbooru.png",
           "jarUrl": ""
         },
@@ -53,7 +53,7 @@
         "name": "Konachan",
         "packageName": "eu.kanade.tachiyomi.extension.all.konachan",
         "resources": {
-          "apkUrl": "https://github.com/Neroovc/extension/releases/latest/download/tachiyomi-all.konachan-v1.0.0.apk",
+          "apkUrl": "https://github.com/Neroovc/extension/releases/latest/download/konachan-release.apk",
           "iconUrl": "https://raw.githubusercontent.com/Neroovc/extension/master/.github/icons/konachan.png",
           "jarUrl": ""
         },
@@ -74,7 +74,7 @@
         "name": "Rule34",
         "packageName": "eu.kanade.tachiyomi.extension.all.rule34",
         "resources": {
-          "apkUrl": "https://github.com/Neroovc/extension/releases/latest/download/tachiyomi-all.rule34-v1.0.0.apk",
+          "apkUrl": "https://github.com/Neroovc/extension/releases/latest/download/rule34-release.apk",
           "iconUrl": "https://raw.githubusercontent.com/Neroovc/extension/master/.github/icons/rule34.png",
           "jarUrl": ""
         },
@@ -95,7 +95,7 @@
         "name": "Yande.re",
         "packageName": "eu.kanade.tachiyomi.extension.all.yandere",
         "resources": {
-          "apkUrl": "https://github.com/Neroovc/extension/releases/latest/download/tachiyomi-all.yandere-v1.0.0.apk",
+          "apkUrl": "https://github.com/Neroovc/extension/releases/latest/download/yandere-release.apk",
           "iconUrl": "https://raw.githubusercontent.com/Neroovc/extension/master/.github/icons/yandere.png",
           "jarUrl": ""
         },
