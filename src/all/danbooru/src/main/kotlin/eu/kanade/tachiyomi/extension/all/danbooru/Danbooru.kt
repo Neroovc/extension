@@ -195,8 +195,8 @@ class Danbooru : HttpSource() {
         SortFilter(),
     )
 
-    class RatingFilter : Filter.Select("Rating", arrayOf("Any", "Safe", "Questionable", "Explicit"))
-    class SortFilter : Filter.Select("Sort", arrayOf("Default", "Popular (24h)"))
+    class RatingFilter : Filter.Select<String>("Rating", arrayOf("Any", "Safe", "Questionable", "Explicit"))
+    class SortFilter : Filter.Select<String>("Sort", arrayOf("Default", "Popular (24h)"))
 
     // ─── Helpers ────────────────────────────────────────────
 
