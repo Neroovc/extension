@@ -21,7 +21,7 @@ android {
 }
 
 dependencies {
-    compileOnly("com.github.keiyoushi:extensions-lib:6e0c96cea8")
+    compileOnly(project(":lib:extensions-lib"))
     implementation("com.squareup.okhttp3:okhttp:5.3.2")
     implementation("org.jsoup:jsoup:1.22.1")
 }

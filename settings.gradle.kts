@@ -17,6 +17,7 @@ dependencyResolutionManagement {
 
 rootProject.name = "extension"
 
+include(":lib:extensions-lib")
 include(":src:all:danbooru")
 include(":src:all:gelbooru")
 include(":src:all:konachan")
