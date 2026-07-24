@@ -15,7 +15,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "mihon-extensions"
+rootProject.name = "extension"
 
 include(":src:all:danbooru")
 include(":src:all:gelbooru")
