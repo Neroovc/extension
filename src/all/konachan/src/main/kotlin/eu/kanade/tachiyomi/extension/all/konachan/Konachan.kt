@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.extension.all.konachan
 
+import eu.kanade.tachiyomi.network.GET
 import eu.kanade.tachiyomi.source.model.Filter
 import eu.kanade.tachiyomi.source.model.FilterList
 import eu.kanade.tachiyomi.source.model.MangasPage
@@ -7,14 +8,11 @@ import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.source.model.SChapter
 import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.source.online.HttpSource
-import rx.Observable
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import eu.kanade.tachiyomi.util.asJsoup
 import okhttp3.Headers
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
-import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import java.util.concurrent.TimeUnit
 
@@ -48,68 +46,35 @@ class Konachan : HttpSource() {
 
     // ─── Popular ────────────────────────────────────────────
 
-    override suspend fun getPopularManga(page: Int): MangasPage {
-        val doc = fetchDocument("$baseUrl/post?page=$page")
-        return parsePostList(doc)
-    }
+    override fun popularMangaRequest(page: Int) = GET("$baseUrl/post?page=$page", headers)
+
+    override fun popularMangaParse(response: Response) = parsePostList(response.use { it.asJsoup() })
 
     // ─── Latest ─────────────────────────────────────────────
 
-    override suspend fun getLatestUpdates(page: Int): MangasPage {
-        val doc = fetchDocument("$baseUrl/post?page=$page")
-        return parsePostList(doc)
-    }
+    override fun latestUpdatesRequest(page: Int) = GET("$baseUrl/post?page=$page", headers)
+
+    override fun latestUpdatesParse(response: Response) = parsePostList(response.use { it.asJsoup() })
 
     // ─── Search ─────────────────────────────────────────────
 
-    override suspend fun getSearchManga(
-        page: Int,
-        query: String,
-        filters: FilterList
-    ): MangasPage {
+    override fun searchMangaRequest(page: Int, query: String, filters: FilterList): Request {
         val tags = query.trim().replace(" ", "+")
-        val url = if (tags.isNotBlank()) {
-            "$baseUrl/post?tags=$tags&page=$page"
-        } else {
-            "$baseUrl/post?page=$page"
-        }
-        val doc = fetchDocument(url)
-        return parsePostList(doc)
+        val url = if (tags.isNotBlank()) "$baseUrl/post?tags=$tags&page=$page"
+                  else "$baseUrl/post?page=$page"
+        return GET(url, headers)
     }
 
-    // ─── Chapter list ───────────────────────────────────────
+    override fun searchMangaParse(response: Response) = parsePostList(response.use { it.asJsoup() })
 
-    override suspend fun getChapterList(manga: SManga, page: Int): List<SChapter> {
-        return listOf(SChapter.create().apply {
-            url = manga.url
-            name = "Image"
-            chapter_number = 1F
-        })
+    // ─── Manga details ──────────────────────────────────────
+
+    override fun mangaDetailsRequest(manga: SManga): Request {
+        return GET(baseUrl + manga.url, headers)
     }
 
-    // ─── Manga details + chapter list ───────────────────────
-
-    override fun fetchMangaDetails(manga: SManga): Observable<SManga> {
-        return client.newCall(mangaDetailsRequest(manga))
-            .asObservableSuccess()
-            .map { response ->
-                val doc = Jsoup.parse(response.body?.string() ?: "", baseUrl + manga.url)
-                parseMangaDetails(doc)
-            }
-    }
-
-    override fun fetchChapterList(manga: SManga): Observable<List<SChapter>> {
-        return client.newCall(chapterListRequest(manga))
-            .asObservableSuccess()
-            .map { response ->
-                val doc = Jsoup.parse(response.body?.string() ?: "", baseUrl + manga.url)
-                listOf(SChapter.create().apply {
-                    url = manga.url
-                    name = "Image"
-                    chapter_number = 1F
-                    date_upload = 0
-                })
-            }
+    override fun mangaDetailsParse(response: Response): SManga {
+        return parseMangaDetails(response.use { it.asJsoup() })
     }
 
     private fun parseMangaDetails(doc: Document): SManga {
@@ -154,18 +119,29 @@ class Konachan : HttpSource() {
         }
     }
 
-    override fun mangaDetailsRequest(manga: SManga): Request {
-        return GET(baseUrl + manga.url, headers)
-    }
+    // ─── Chapter list (1 chapter per post) ──────────────────
 
     override fun chapterListRequest(manga: SManga): Request {
         return GET(baseUrl + manga.url, headers)
     }
 
+    override fun chapterListParse(response: Response): List<SChapter> {
+        val doc = response.use { it.asJsoup() }
+        return listOf(SChapter.create().apply {
+            url = doc.location().substringAfter(baseUrl)
+            name = "Image"
+            chapter_number = 1F
+        })
+    }
+
     // ─── Pages ──────────────────────────────────────────────
 
-    override suspend fun getPageList(chapter: SChapter): List<Page> {
-        val doc = fetchDocument(baseUrl + chapter.url)
+    override fun pageListRequest(chapter: SChapter): Request {
+        return GET(baseUrl + chapter.url, headers)
+    }
+
+    override fun pageListParse(response: Response): List<Page> {
+        val doc = response.use { it.asJsoup() }
         val img = doc.selectFirst("#image")
             ?: doc.selectFirst("img#image")
             ?: return emptyList()
@@ -181,7 +157,7 @@ class Konachan : HttpSource() {
         return listOf(Page(0, imageUrl = src))
     }
 
-    override suspend fun getImageUrl(page: Page): String = page.imageUrl ?: ""
+    override fun imageUrlParse(response: Response): String = ""
 
     // ─── Filters ────────────────────────────────────────────
 
@@ -191,19 +167,7 @@ class Konachan : HttpSource() {
 
     // ─── Helpers ────────────────────────────────────────────
 
-    private suspend fun fetchDocument(url: String): Document = withContext(Dispatchers.IO) {
-        val request = Request.Builder()
-            .url(url)
-            .headers(headers)
-            .build()
-        val response = client.newCall(request).execute()
-        val body = response.body?.string() ?: error("Empty body")
-        response.close()
-        Jsoup.parse(body, url)
-    }
-
     private fun parsePostList(doc: Document): MangasPage {
-        // Moebooru: <div class="post-preview"> with <a> and <img>
         val posts = doc.select("div.post-preview")
         val mangaList = posts.mapNotNull { div ->
             val link = div.selectFirst("a") ?: return@mapNotNull null
@@ -238,18 +202,4 @@ class Konachan : HttpSource() {
         val regex = Regex("""/post/show/(\d+)""")
         return regex.find(url)?.groupValues?.getOrElse(1) { "?" } ?: "?"
     }
-
-    // ─── Deprecated ─────────────────────────────────────────
-
-    override fun popularMangaRequest(page: Int) = throw UnsupportedOperationException()
-    override fun popularMangaParse(response: Response) = throw UnsupportedOperationException()
-    override fun latestUpdatesRequest(page: Int) = throw UnsupportedOperationException()
-    override fun latestUpdatesParse(response: Response) = throw UnsupportedOperationException()
-    override fun searchMangaRequest(page: Int, query: String, filters: FilterList) = throw UnsupportedOperationException()
-    override fun searchMangaParse(response: Response) = throw UnsupportedOperationException()
-    override fun chapterListParse(response: Response) = throw UnsupportedOperationException()
-    override fun chapterListRequest(chapter: SChapter) = throw UnsupportedOperationException()
-    override fun pageListParse(response: Response) = throw UnsupportedOperationException()
-    override fun pageListRequest(chapter: SChapter) = throw UnsupportedOperationException()
-    override fun imageUrlParse(response: Response) = throw UnsupportedOperationException()
 }
