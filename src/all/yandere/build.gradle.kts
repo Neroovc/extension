@@ -26,7 +26,7 @@ android {
 }
 
 dependencies {
-    compileOnly("com.github.mihonapp.mihon:source-api:v0.19.3")
+    compileOnly("com.github.keiyoushi:extensions-lib:6e0c96cea8")
     implementation("org.jsoup:jsoup:1.17.2")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
