@@ -1,5 +1,5 @@
 plugins {
-    id("com.android.library")
+    id("com.android.application")
     kotlin("android")
 }
 
@@ -8,7 +8,11 @@ android {
     compileSdk = 34
 
     defaultConfig {
+        applicationId = "eu.kanade.tachiyomi.extension.all.konachan"
         minSdk = 21
+        targetSdk = 34
+        versionCode = 1
+        versionName = "1.0.0"
     }
 
     compileOptions {
@@ -22,7 +26,7 @@ android {
 }
 
 dependencies {
-    compileOnly("eu.kanade.tachiyomi:source-api:1.6")
+    compileOnly("com.github.mihonapp.mihon:source-api:v0.19.3")
     implementation("org.jsoup:jsoup:1.17.2")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
