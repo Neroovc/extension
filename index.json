@@ -1,6 +1,7 @@
 {
   "name": "Booru Extensions",
   "badgeLabel": "BRU",
+  "signingKey": "be410c5546db7a09047795981ae43f8bcaa993cd91442e7f5013e18525162cad",
   "contact": {
     "website": "https://github.com/Neroovc/extension"
   },
