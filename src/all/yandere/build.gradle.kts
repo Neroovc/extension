@@ -5,29 +5,28 @@ plugins {
 
 android {
     namespace = "eu.kanade.tachiyomi.extension.all.yandere"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "eu.kanade.tachiyomi.extension.all.yandere"
         minSdk = 21
-        targetSdk = 34
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0.0"
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "17"
     }
 }
 
 dependencies {
-    compileOnly("com.github.keiyoushi:extensions-lib:6e0c96cea8")
-    implementation("org.jsoup:jsoup:1.17.2")
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    compileOnly("com.github.keiyoushi:extensions-lib:1.4.5")
+    implementation("com.squareup.okhttp3:okhttp:5.3.2")
+    implementation("org.jsoup:jsoup:1.22.1")
 }
