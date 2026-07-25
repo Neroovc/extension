@@ -33,11 +33,12 @@ android {
             signingConfig = signingConfigs.getByName("release")
         }
     }
+}
 
-    applicationVariants.all {
-        outputs.all {
-            (this as com.android.build.gradle.internal.api.BaseVariantOutputImpl).outputFileName =
-                "tachiyomi-all.rule34-v${versionName}.apk"
+afterEvaluate {
+    android.applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            output.outputFileName = "tachiyomi-all.rule34-v${variant.versionName}.apk"
         }
     }
 }
