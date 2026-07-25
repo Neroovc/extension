@@ -32,6 +32,15 @@ jobs:
           KEY_PASSWORD: android
         run: ./gradlew assembleRelease
 
+      - name: Rename APKs to keiyoushi convention
+        run: |
+          for apk in src/all/*/build/outputs/apk/release/*-release.apk; do
+            ext=$(echo "$apk" | sed 's|src/all/||;s|/build/outputs/apk/release/.*||')
+            dir=$(dirname "$apk")
+            mv "$apk" "$dir/tachiyomi-all.$ext-v1.0.0.apk"
+            echo "Renamed: $apk -> $dir/tachiyomi-all.$ext-v1.0.0.apk"
+          done
+
       - name: Delete old latest release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

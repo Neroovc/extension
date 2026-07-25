@@ -35,14 +35,6 @@ android {
     }
 }
 
-afterEvaluate {
-    android.applicationVariants.all { variant ->
-        variant.outputs.all { output ->
-            output.outputFileName = "tachiyomi-all.konachan-v${variant.versionName}.apk"
-        }
-    }
-}
-
 dependencies {
     compileOnly(project(":lib:extensions-lib"))
     implementation("com.squareup.okhttp3:okhttp:5.3.2")
