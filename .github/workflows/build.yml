@@ -21,6 +21,9 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Generate index.min.json
+        run: python3 -c "import json; json.dump(json.load(open('index.json')), open('index.min.json','w'), separators=(',',':'))"
+
       - name: Build all extensions
         env:
           KEYSTORE_PATH: ${{ github.workspace }}/release.keystore
